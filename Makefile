@@ -34,15 +34,15 @@ clean:
 
 # Run scenarios
 run_normal:
-	@.\$(TARGET).exe 480 3 5 > simulation_output.txt
+	@.\$(TARGET) 480 3 5 > simulation_output.txt
 	@python gui/gui.py run_normal
 
 run_rush_hour:
-	@.\$(TARGET).exe 120 5 2 > simulation_output.txt
+	@.\$(TARGET) 240 5 2 > simulation_output.txt
 	@python gui/gui.py run_rush_hour
 
 run_off_peak:
-	@.\$(TARGET).exe 480 2 10 > simulation_output.txt
+	@.\$(TARGET) 480 2 10 > simulation_output.txt
 	@python gui/gui.py run_off_peak
 
 # Run GUI after running the normal simulation
@@ -55,6 +55,6 @@ help:
 	@echo "  all            - Compile the program"
 	@echo "  clean          - Remove all build files"
 	@echo "  run_normal     - Run the normal simulation (8 hours, 3 tellers, avg. 5 min between arrivals)"
-	@echo "  run_rush_hour  - Run the rush hour simulation (2 hours, 5 tellers, avg. 2 min between arrivals)"
+	@echo "  run_rush_hour  - Run the rush hour simulation (4 hours, 5 tellers, avg. 2 min between arrivals)"
 	@echo "  run_off_peak   - Run the off-peak simulation (8 hours, 2 tellers, avg. 10 min between arrivals)"
 	@echo "  run_gui        - Run the GUI to display simulation results"
