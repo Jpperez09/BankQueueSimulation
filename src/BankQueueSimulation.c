@@ -5,7 +5,7 @@
 
 // Simulation constants
 #define TOTAL_SIMULATION_TIME 480 // 8 hours in minutes
-#define NUM_TELLERS 3             // Number of tellers in the bank
+#define NUM_TELLERS 5             // Maximum number of tellers in the bank
 #define ARRIVAL_RATE 5            // Average time (in minutes) between arrivals
 #define MAX_CUSTOMERS 1000        // Max number of customers that can arrive
 
@@ -33,6 +33,8 @@ int num_tellers = NUM_TELLERS;
 int arrival_rate = ARRIVAL_RATE;
 int total_idle_time = 0;
 int current_time = 0;
+int total_queue_length = 0;
+int max_queue_length = 0;
 
 int main(int argc, char *argv[]) {
     // Parse command line arguments for different scenarios
@@ -80,12 +82,15 @@ void simulateArrivals() {
 // Simulate the service process for customers arriving at the bank
 void simulateService() {
     int tellers[num_tellers];
-    for (int i = 0; i < num_tellers; i++) tellers[i] = 0; // Tracks when each teller will be free
+    int teller_idle_time[num_tellers];
+    for (int i = 0; i < num_tellers; i++) {
+        tellers[i] = 0; // Tracks when each teller will be free
+        teller_idle_time[i] = 0; // Tracks idle time for each teller
+    }
     int queue[MAX_CUSTOMERS];       // Queue to hold waiting customers (store their indices)
     int queue_length = 0;
     int customers_served = 0;
-    int total_queue_length = 0;
-    int max_queue_length = 0;
+    int min_wait_time = MAX_CUSTOMERS;
 
     // Process each customer in the order they arrived
     for (int i = 0; i < total_customers; i++) {
@@ -96,6 +101,10 @@ void simulateService() {
         // Check for an available teller
         for (int j = 0; j < num_tellers; j++) {
             if (tellers[j] <= arrival_time) { // Teller is free
+                // Calculate idle time for the teller
+                if (tellers[j] < arrival_time) {
+                    teller_idle_time[j] += (arrival_time - tellers[j]);
+                }
                 teller_available = j;
                 break;
             }
@@ -136,6 +145,9 @@ void simulateService() {
         // Assign customer to the earliest available teller
         customers[customer_index].start_service_time = tellers[earliest_teller];
         customers[customer_index].wait_time = tellers[earliest_teller] - arrival_time;
+        if (customers[customer_index].wait_time < min_wait_time && customers[customer_index].wait_time > 0) {
+            min_wait_time = customers[customer_index].wait_time;
+        }
         tellers[earliest_teller] += service_time; // Update teller's next available time
         customers_served++;
 
@@ -155,8 +167,13 @@ void simulateService() {
     // Calculate total idle time for all tellers
     for (int i = 0; i < num_tellers; i++) {
         if (tellers[i] < total_simulation_time) {
-            total_idle_time += (total_simulation_time - tellers[i]);
+            teller_idle_time[i] += (total_simulation_time - tellers[i]);
         }
+    }
+
+    // Summarize teller idle times
+    for (int i = 0; i < num_tellers; i++) {
+        total_idle_time += teller_idle_time[i];
     }
 
     printf("Total customers served: %d\n", customers_served);
@@ -167,21 +184,19 @@ void simulateService() {
 void analyzeResults() {
     int total_wait_time = 0;
     int served_customers = 0;
-    int total_queue_length = 0;
-    int max_queue_length = 0;
-    int min_wait_time = MAX_CUSTOMERS;
     int max_wait_time = 0;
+    int min_wait_time = MAX_CUSTOMERS;
 
     for (int i = 0; i < total_customers; i++) {
         total_wait_time += customers[i].wait_time;
         if (customers[i].wait_time > 0 || customers[i].start_service_time != 0) {
             served_customers++;
         }
-        if (customers[i].wait_time < min_wait_time) {
-            min_wait_time = customers[i].wait_time;
-        }
         if (customers[i].wait_time > max_wait_time) {
             max_wait_time = customers[i].wait_time;
+        }
+        if (customers[i].wait_time < min_wait_time && customers[i].wait_time > 0) {
+            min_wait_time = customers[i].wait_time;
         }
     }
 
@@ -191,7 +206,7 @@ void analyzeResults() {
 
     printf("Average wait time for served customers: %.2f\n", average_wait_time);
     printf("Maximum wait time: %d\n", max_wait_time);
-    printf("Minimum wait time: %d\n", min_wait_time);
+    printf("Minimum wait time: %d\n", min_wait_time == MAX_CUSTOMERS ? 0 : min_wait_time);
     printf("Average queue length: %.2f\n", average_queue_length);
     printf("Max queue length: %d\n", max_queue_length);
     printf("Teller utilization: %.2f%%\n", teller_utilization * 100);
