@@ -119,23 +119,19 @@ def draw_environment(customers, tellers_status, progress_bars, data=None):
 
     # Draw buttons
     run_again_button = pygame.Rect(950, 300, 200, 60)
-    test_scenario_button = pygame.Rect(950, 380, 200, 60)
-    draw_buttons(run_again_button, test_scenario_button)
+    draw_buttons(run_again_button)
 
     pygame.display.flip()
 
 # Draw buttons with improved visibility
-def draw_buttons(run_again_button, test_scenario_button):
+def draw_buttons(run_again_button):
     pygame.draw.rect(screen, RED, run_again_button)  # Changed button color to RED for better visibility
-    pygame.draw.rect(screen, BLUE, test_scenario_button)  # Kept one button BLUE for differentiation
     
     # Button Text
     run_again_text = font_large.render("Run Again", True, WHITE)
-    test_scenario_text = font_small.render("Test Scenarios", True, WHITE)  # Reduced size for better fit
     
     # Draw button text
     screen.blit(run_again_text, (run_again_button.x + 20, run_again_button.y + 10))
-    screen.blit(test_scenario_text, (test_scenario_button.x + 10, test_scenario_button.y + 10))
 
 # Main function to run the GUI
 def main():
@@ -161,12 +157,8 @@ def main():
     customers = [1, 2, 3, 4, 5]
     progress_bars = ['free' for _ in range(num_tellers)]
 
-    # Buttons
+    # Button
     run_again_button = pygame.Rect(950, 300, 200, 60)  # Placed in the middle right of the screen
-    test_scenario_button = pygame.Rect(950, 380, 200, 60)  # Placed in the middle right of the screen
-    dropdown_open = False
-    dropdown_rect = pygame.Rect(950, 460, 200, 150)  # Enlarged dropdown area and placed accordingly
-    dropdown_options = ['Normal', 'Rush Hour', 'Off Peak']
 
     # Animation loop
     animation_step = 0
@@ -180,29 +172,9 @@ def main():
                     simulation_output, num_tellers = run_simulation(current_simulation)
                     if simulation_output:
                         data = parse_output(simulation_output)
-                elif test_scenario_button.collidepoint(event.pos):
-                    # Toggle dropdown visibility
-                    dropdown_open = not dropdown_open
-                elif dropdown_open and dropdown_rect.collidepoint(event.pos):
-                    # Handle dropdown selection
-                    dropdown_index = (event.pos[1] - dropdown_rect.y) // 40  # Adjusted size for better click detection
-                    if 0 <= dropdown_index < len(dropdown_options):
-                        selected_option = dropdown_options[dropdown_index]
-                        current_simulation = f'run_{selected_option.lower().replace(" ", "_")}'
-                        simulation_output, num_tellers = run_simulation(current_simulation)
-                        if simulation_output:
-                            data = parse_output(simulation_output)
-                        dropdown_open = False
 
         # Draw the environment with placeholder data
         draw_environment(customers[:animation_step % len(customers)], tellers_status, progress_bars, data)
-
-        # Draw dropdown if open
-        if dropdown_open:
-            pygame.draw.rect(screen, GRAY, dropdown_rect)
-            for i, option in enumerate(dropdown_options):
-                option_text = font_medium.render(option, True, BLACK)
-                screen.blit(option_text, (dropdown_rect.x + 10, dropdown_rect.y + i * 40))  # Adjusted spacing for better clarity
 
         # Simulate processing (animate customer addition to queue)
         animation_step += 1
